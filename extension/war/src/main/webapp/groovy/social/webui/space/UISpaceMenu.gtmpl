@@ -25,6 +25,7 @@
   import org.exoplatform.social.core.space.SpaceUtils;
   import org.exoplatform.social.core.service.LinkProvider;
   import org.apache.commons.lang.StringEscapeUtils;
+  import org.exoplatform.portal.application.PortalRequestContext;
 
   def uicomponentId = uicomponent.id;
 	
@@ -82,6 +83,9 @@
 <div class="uiSpaceMenu clearfix" id="UISpaceMenu">
   <%
     String activityStreamLabel = _ctx.appRes(uicomponent.getId() + ".label.ActivityStream");
+    def pcontext = Util.getPortalRequestContext();
+    def spaceDisplayName = uicomponent.getSpace().getDisplayName();
+    pcontext.getRequest().setAttribute(PortalRequestContext.REQUEST_TITLE, spaceDisplayName+" - "+activityStreamLabel);
   %>
   
   <ul class="nav nav-tabs spaceMenuTab" id="spaceMenuTab" style="visibility: hidden;">
@@ -123,6 +127,7 @@
     if(appSelected != null && nodeName.equals(appSelected)) {
       pageURI = "href=\"javascript:void(0);\"";
       selectedClazz = "active";
+      pcontext.getRequest().setAttribute(PortalRequestContext.REQUEST_TITLE, spaceDisplayName+" - "+nodeLabel);
     }
   %>
     <li class="$selectedClazz">
