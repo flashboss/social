@@ -289,7 +289,6 @@ public class RDBMSIdentityStorageImpl extends IdentityStorageImpl {
    * @return the identity
    * @throws IdentityStorageException if has any error
    */
-  @ExoTransactional
   public Identity findIdentityById(final String nodeId) throws IdentityStorageException {
     long id = EntityConverterUtils.parseId(nodeId);
     IdentityEntity entity = getIdentityDAO().find(id);
@@ -355,7 +354,6 @@ public class RDBMSIdentityStorageImpl extends IdentityStorageImpl {
    * @param profile the profile
    * @throws IdentityStorageException if has any error
    */
-  @ExoTransactional
   public Profile loadProfile(Profile profile) throws IdentityStorageException {
     long identityId = EntityConverterUtils.parseId(profile.getIdentity().getId());    
     IdentityEntity entity = identityDAO.find(identityId);
