@@ -20,10 +20,15 @@ package org.exoplatform.social.core.jpa.updater;
 import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
 
+import org.exoplatform.commons.chromattic.ChromatticLifeCycle;
 import org.exoplatform.commons.file.services.NameSpaceService;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ValueParam;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.core.WorkspaceContainerFacade;
+import org.exoplatform.services.jcr.impl.core.SessionRegistry;
+import org.exoplatform.social.common.lifecycle.SocialChromatticLifeCycle;
 import org.exoplatform.social.core.chromattic.entity.ProviderRootEntity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
@@ -52,6 +57,7 @@ public class RDBMSMigrationManager implements Startable {
   
   public static final String MIGRATION_SETTING_GLOBAL_KEY = "MIGRATION_SETTING_GLOBAL";
   public static final String MIGRATION_RUNNING_NODE_KEY = "NODE_RUNNING_MIGRATION";
+  public static final String SOCIAL_WORKSPACE = "social";
 
   private Thread migrationThread;
   
@@ -239,58 +245,96 @@ public class RDBMSMigrationManager implements Startable {
             // Because if there is identity migrate failed, we could not start to migrate connection and activities
             if (!MigrationContext.isDone() && MigrationContext.isIdentityDone()) {
 
-              // cleanup Connections
-              if (!MigrationContext.isConnectionCleanupDone()) {
-                long t = System.currentTimeMillis();
-                getRelationshipMigration().doRemove();
+              if ( !forceRemoveJCR ) {
 
-                if (MigrationContext.getIdentitiesCleanupConnectionFailed().isEmpty()) {
-                  updateSettingValue(MigrationContext.SOC_RDBMS_CONNECTION_CLEANUP_KEY, Boolean.TRUE);
-                  MigrationContext.setConnectionCleanupDone(true);
+                // cleanup Connections
+                if (!MigrationContext.isConnectionCleanupDone()) {
+                  long t = System.currentTimeMillis();
+                  getRelationshipMigration().doRemove();
+
+                  if (MigrationContext.getIdentitiesCleanupConnectionFailed().isEmpty()) {
+                    updateSettingValue(MigrationContext.SOC_RDBMS_CONNECTION_CLEANUP_KEY, Boolean.TRUE);
+                    MigrationContext.setConnectionCleanupDone(true);
+                  }
+                  timeToCleanupConnections = System.currentTimeMillis() - t;
                 }
-                timeToCleanupConnections = System.currentTimeMillis() - t;
-              }
 
-              // cleanup activities
-              if (!MigrationContext.isActivityCleanupDone()) {
-                long t = System.currentTimeMillis();
-                getActivityMigrationService().doRemove();
+                // cleanup activities
+                if (!MigrationContext.isActivityCleanupDone()) {
+                  long t = System.currentTimeMillis();
+                  getActivityMigrationService().doRemove();
 
-                if (MigrationContext.getIdentitiesCleanupActivityFailed().isEmpty()) {
-                  updateSettingValue(MigrationContext.SOC_RDBMS_ACTIVITY_CLEANUP_KEY, Boolean.TRUE);
-                  MigrationContext.setActivityCleanupDone(true);
+                  if (MigrationContext.getIdentitiesCleanupActivityFailed().isEmpty()) {
+                    updateSettingValue(MigrationContext.SOC_RDBMS_ACTIVITY_CLEANUP_KEY, Boolean.TRUE);
+                    MigrationContext.setActivityCleanupDone(true);
+                  }
+                  timeToCleanupActivities = System.currentTimeMillis() - t;
                 }
-                timeToCleanupActivities = System.currentTimeMillis() - t;
-              }
 
-              // Cleanup identity
-              if (!MigrationContext.isIdentityCleanupDone()) {
-                long t = System.currentTimeMillis();
-                getIdentityMigrationService().doRemove();
 
-                if (MigrationContext.getIdentitiesCleanupFailed().isEmpty()) {
-                  updateSettingValue(MigrationContext.SOC_RDBMS_IDENTITY_CLEANUP_KEY, Boolean.TRUE);
-                  MigrationContext.setIdentityCleanupDone(true);
+                // Cleanup identity
+                if (!MigrationContext.isIdentityCleanupDone()) {
+                  long t = System.currentTimeMillis();
+                  getIdentityMigrationService().doRemove();
+
+                  if (MigrationContext.getIdentitiesCleanupFailed().isEmpty()) {
+                    updateSettingValue(MigrationContext.SOC_RDBMS_IDENTITY_CLEANUP_KEY, Boolean.TRUE);
+                    MigrationContext.setIdentityCleanupDone(true);
+                  }
+                  timeToCleanupIdentities = System.currentTimeMillis() - t;
                 }
-                timeToCleanupIdentities = System.currentTimeMillis() - t;
-              }
 
-              // cleanup spaces
-              if (!MigrationContext.isSpaceCleanupDone()) {
-                long t = System.currentTimeMillis();
-                getSpaceMigrationService().doRemove();
+                // cleanup spaces
+                if (!MigrationContext.isSpaceCleanupDone()) {
+                  long t = System.currentTimeMillis();
+                  getSpaceMigrationService().doRemove();
 
-                if (MigrationContext.getSpaceCleanupFailed().isEmpty()) {
-                  updateSettingValue(MigrationContext.SOC_RDBMS_SPACE_CLEANUP_KEY, Boolean.TRUE);
-                  MigrationContext.setSpaceCleanupDone(true);
+                  if (MigrationContext.getSpaceCleanupFailed().isEmpty()) {
+                    updateSettingValue(MigrationContext.SOC_RDBMS_SPACE_CLEANUP_KEY, Boolean.TRUE);
+                    MigrationContext.setSpaceCleanupDone(true);
+                  }
+                  timeToCleanupSpaces = System.currentTimeMillis() - t;
                 }
-                timeToCleanupSpaces = System.currentTimeMillis() - t;
+
+                if (MigrationContext.isIdentityCleanupDone()&& MigrationContext.isSpaceCleanupDone()){
+                  updateSettingValue(MigrationContext.SOC_RDBMS_MIGRATION_STATUS_KEY, Boolean.TRUE);
+                  MigrationContext.setDone(true);
+                }
+
+              } else {
+
+                //force social workspace remove
+                try {
+                  ManageableRepository repo = repositoryService.getCurrentRepository();
+                  ChromatticLifeCycle lifeCycle = chromatticManager.getLifeCycle(SocialChromatticLifeCycle.SOCIAL_LIFECYCLE_NAME);
+                  String workspace = lifeCycle.getWorkspaceName();
+                  if (lifeCycle.getContext() != null) {
+                    lifeCycle.closeContext(true);
+                  }
+
+                  // Close other session
+                  WorkspaceContainerFacade wc = repo.getWorkspaceContainer(workspace);
+                  SessionRegistry sessionRegistry = (SessionRegistry)wc.getComponent(SessionRegistry.class);
+                  sessionRegistry.closeSessions(workspace);
+
+                  //repo.getWorkspaceContainer(workspace).setState(ManageableRepository.OFFLINE);
+                  if (repo.canRemoveWorkspace(workspace)) {
+                    repo.removeWorkspace(workspace);
+                    updateSettingValue(MigrationContext.SOC_RDBMS_MIGRATION_STATUS_KEY, Boolean.TRUE);
+                    MigrationContext.setDone(true);
+                  } else {
+                    LOG.warn("Social workspace is not removeable, so it is not removed.");
+                  }
+
+                } catch (RepositoryException ex) {
+                  LOG.error("Can not remove social workspace", ex);
+                }
+
+
+
               }
 
-              if (MigrationContext.isIdentityCleanupDone()&& MigrationContext.isSpaceCleanupDone() || forceRemoveJCR){
-                updateSettingValue(MigrationContext.SOC_RDBMS_MIGRATION_STATUS_KEY, Boolean.TRUE);
-                MigrationContext.setDone(true);
-              }
+
             }
             
             //
@@ -429,6 +473,18 @@ public class RDBMSMigrationManager implements Startable {
   }
 
   private boolean checkCanStartMigration() {
+    //check if workspace social is available
+    try {
+      ManageableRepository repo = repositoryService.getCurrentRepository();
+      if ( !repo.isWorkspaceInitialized(SOCIAL_WORKSPACE) ) {
+        return false;
+      }
+    }
+    catch (Exception e){
+      LOG.error("Problem to check social workspace status: {}", e);
+      return false;
+    }
+
     if (!clusterMode) {
       return true;
     }
