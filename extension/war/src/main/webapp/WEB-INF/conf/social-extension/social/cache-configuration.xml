@@ -51,7 +51,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.IdentityCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.IdentityCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.IdentityCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -72,7 +72,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.IdentityIndexCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.IdentityIndexCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.IdentityIndexCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -93,7 +93,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.ProfileCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.ProfileCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.ProfileCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -114,7 +114,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.IdentitiesCountCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.IdentitiesCountCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.IdentitiesCountCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -135,7 +135,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.IdentitiesCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.IdentitiesCache.TimeToLive:86400}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.IdentitiesCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
 
@@ -157,7 +157,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.IdentitiesCache.Capacity:5}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.IdentitiesCache.TimeToLive:3600000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.ActiveIdentitiesCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
 
@@ -180,7 +180,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.RelationshipCache.Capacity:10000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.RelationshipCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.RelationshipCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -201,7 +201,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.RelationshipFromIdentityCache.Capacity:10000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.RelationshipFromIdentityCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.RelationshipFromIdentityCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -222,7 +222,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.RelationshipsCountCache.Capacity:10000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.RelationshipsCountCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.RelationshipsCountCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -243,7 +243,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.RelationshipsCache.Capacity:10000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.RelationshipsCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.RelationshipsCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -264,7 +264,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.SuggestionsCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.SuggestionsCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.SuggestionsCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
 
@@ -287,7 +287,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.ActivityCache.Capacity:6000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.ActivityCache.TimeToLive:3600000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.ActivityCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -308,7 +308,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.ActivitiesCountCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.ActivitiesCountCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.ActivitiesCountCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -329,7 +329,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.ActivitiesCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.ActivitiesCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.ActivitiesCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
 
@@ -352,7 +352,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.SpaceCache.Capacity:500}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.SpaceCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.SpaceCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -373,7 +373,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.SpaceRefCache.Capacity:2000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.SpaceRefCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.SpaceRefCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -394,7 +394,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.SpacesCountCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.SpacesCountCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.SpacesCountCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
                 <object-param>
@@ -425,7 +425,7 @@
                         <field name="strategy"><string>LIRS</string></field>
                         <field name="maxEntries"><int>${exo.cache.social.SpacesCache.Capacity:5000}</int></field>
                         <field name="lifespan"><long>${exo.cache.social.SpacesCache.TimeToLive:86400000}</long></field>
-                        <field name="replicated"><boolean>true</boolean></field>
+                        <field name="cacheMode"><string>${exo.cache.social.SpacesCache.cacheMode:replicated}</string></field>
                     </object>
                 </object-param>
 
