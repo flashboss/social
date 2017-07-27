@@ -188,9 +188,9 @@
                    $.ajax({
                      type: "GET",
                      cache: false,
-                     url: restUrl
-                   }).complete(function (jqXHR) {
-                     if (jqXHR.readyState === 4) {
+                     url: restUrl,
+                     complete: function (jqXHR) {
+                       if (jqXHR.readyState === 4) {
                          var userData = $.parseJSON(jqXHR.responseText);
 
                          if (userData) {
@@ -199,6 +199,7 @@
                          } else {
                            ajaxCall(userId, restUrl);
                          }
+                       }
                      }
                    });
                  }
