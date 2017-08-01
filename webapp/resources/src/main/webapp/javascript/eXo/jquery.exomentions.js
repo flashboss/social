@@ -180,9 +180,9 @@
       }
       return info;
     },
-    isIE : ($.browser.msie === true),
-    isFirefox : ($.browser.mozilla === true),
-    brVersion : $.browser.version
+    // isIE : ($.browser.msie === true),
+    // isFirefox : ($.browser.mozilla === true),
+    // brVersion : $.browser.version
   };
 
   var eXoMentions = function(settings) {
