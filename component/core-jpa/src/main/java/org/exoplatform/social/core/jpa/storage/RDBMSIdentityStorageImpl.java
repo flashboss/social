@@ -182,7 +182,7 @@ public class RDBMSIdentityStorageImpl extends IdentityStorageImpl {
 
       } else if (Profile.CONTACT_IMS.equals(e.getKey())
               || Profile.CONTACT_PHONES.equals(e.getKey())
-              || Profile.CONTACT_URLS.equals(e.getKey())) {
+              || Profile.CONTACT_URLS.equals(e.getKey()) || (!Profile.EXPERIENCES_SKILLS.equals(e.getKey()) && e.getValue() instanceof ArrayList)) {
 
         List<Map<String, String>> list = (List<Map<String, String>>) e.getValue();
         JSONArray arr = new JSONArray();
@@ -193,7 +193,7 @@ public class RDBMSIdentityStorageImpl extends IdentityStorageImpl {
 
         entityProperties.put(e.getKey(), arr.toString());
 
-      } else if (!Profile.EXPERIENCES_SKILLS.equals(e.getKey())) {
+      } else if (!Profile.EXPERIENCES_SKILLS.equals(e.getKey()) && e.getValue() instanceof String) {
         Object val = e.getValue();
         if (val != null) {
           entityProperties.put(e.getKey(), String.valueOf(val));
