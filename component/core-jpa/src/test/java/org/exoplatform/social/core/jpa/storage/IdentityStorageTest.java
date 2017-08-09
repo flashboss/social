@@ -45,7 +45,9 @@ import org.exoplatform.social.core.storage.impl.StorageUtils;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -762,7 +764,30 @@ public class IdentityStorageTest extends AbstractCoreTest {
     stream = identityStorage.getAvatarInputStreamById(identity);
     assertNotNull(stream);
   }
-  
+
+  public void testEditProfileByAddingNewProperty() throws Exception {
+    List<Map<String, String>> listMap = new ArrayList<Map<String, String>>();
+    Map<String, String> map1 = new HashMap<String, String>();
+    String str = "test";
+    map1.put("newProperty", str);
+    listMap.add(map1);
+    Identity testIdentity = populateIdentity("testUser", false);
+    identityStorage.saveIdentity(testIdentity);
+
+    Profile currentProfile = new Profile(testIdentity);
+    identityStorage.updateIdentity(testIdentity);
+    identityStorage.saveProfile(currentProfile);
+    currentProfile = identityStorage.loadProfile(currentProfile);
+
+    currentProfile.setProperty("newProperty", listMap);
+    identityStorage.updateProfile(currentProfile);
+    List<Map<String, String>> property = (List<Map<String, String>>) currentProfile.getProperty("newProperty");
+    assertNotNull(property);
+
+    identityStorage.deleteIdentity(testIdentity);
+  }
+
+
   /**
    * Populate one identity with remoteId.
    * 
