@@ -131,7 +131,7 @@ public abstract class AbstractPluginTest extends AbstractCoreTest {
 
     super.tearDown();
   }
-  
+
   public void destroyPlugins(BaseNotificationPlugin plugin) {
     plugin = null;
   }

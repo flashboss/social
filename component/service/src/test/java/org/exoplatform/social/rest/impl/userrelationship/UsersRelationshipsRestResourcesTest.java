@@ -67,9 +67,17 @@ public class UsersRelationshipsRestResourcesTest extends AbstractResourceTest {
     CollectionEntity collections = (CollectionEntity) response.getEntity();
     List<? extends DataEntity> relationships = collections.getEntities();
     assertEquals(3, relationships.size());
-    assertEquals("/rest/" + VersionResources.VERSION_ONE + "/social/users/root", relationships.get(0).get(RestProperties.SENDER));
-    assertEquals("/rest/" + VersionResources.VERSION_ONE + "/social/users/mary", relationships.get(0).get(RestProperties.RECEIVER));
-    
+    String expectedReceiver = "/rest/" + VersionResources.VERSION_ONE + "/social/users/mary";
+    boolean expectedReceiverFound = false;
+    for (DataEntity dataEntity : relationships) {
+      if(expectedReceiver.equals(dataEntity.get(RestProperties.RECEIVER))) {
+        assertEquals("/rest/" + VersionResources.VERSION_ONE + "/social/users/root", dataEntity.get(RestProperties.SENDER));
+        assertEquals(Relationship.Type.CONFIRMED.name(), dataEntity.get("status"));
+        expectedReceiverFound =true;
+      }
+    }
+    assertTrue("The receiver 'mary' wasn't found", expectedReceiverFound);
+
     //clean
     relationshipManager.delete(relationship1);
     relationshipManager.delete(relationship2);
