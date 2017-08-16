@@ -122,14 +122,14 @@ public class WebTemplateProvider extends TemplateProvider {
         comment = Utils.getActivityManager().getActivity(commentId);
       }
       if (activity == null) {
-        LOG.debug("Activity with id '{}' was removed but the notification is remaining", activityId);
+        LOG.debug("Activity with id '{}' was removed but the notification with id'{}' is remaining", activityId, notification.getId());
         return null;
       }
       if(activity.isComment()) {
         comment = Utils.getActivityManager().getParentActivity(activity);
       }
       if (comment == null) {
-        LOG.debug("Comment of activity with id '{}' was removed but the notification is remaining", activityId);
+        LOG.debug("Comment of activity with id '{}' was removed but the notification with id'{}' is remaining", commentId, notification.getId());
         return null;
       }
       String pluginId = notification.getKey().getId();
