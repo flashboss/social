@@ -25,8 +25,10 @@ import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.picketlink.idm.spi.configuration.metadata.*;
 
-import java.sql.*;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -36,9 +38,15 @@ public class AnyMembershipMigration implements CustomTaskChange {
   private static final String GROUP_ID = "ID";
   private static final String GROUP_NAME = "NAME";
   private static final String USER_NAME = "NAME";
+  private static final String SPACE_ID = "SPACE_ID";
   private static final String TYPE_SPACE = ".spaces";
   private static final String INSERT_SPACE_MEMBER = "insert into SOC_SPACES_MEMBERS(SPACE_ID, USER_ID, STATUS, LAST_ACCESS, VISITED) VALUES(?,?,?,?,?)";
   private static final String USER_IN_GROUP_QUERY = "select i.NAME from jbid_io i INNER JOIN jbid_io_rel r on i.ID = r.TO_IDENTITY INNER JOIN jbid_io_rel_name n on r.NAME = n.ID where n.NAME = '*' AND r.FROM_IDENTITY = ?";
+  private static final String SPACE_QUERY = "select SPACE_ID from SOC_SPACES where GROUP_ID = ?";
+
+  private PreparedStatement userStm;
+  private PreparedStatement insertStm;
+  private PreparedStatement spaceStm;
 
   private final int BUFFER = 50;
 
@@ -55,100 +63,118 @@ public class AnyMembershipMigration implements CustomTaskChange {
     try {
       boolean isHibernate = checkIDM();
 
-      Future<int[]> result;
+      int[] result;
       if (isHibernate) {
-        result = pool.submit(migrateJDBC(database));
+        result = migrateJDBC(database);
       } else {
-        result = pool.submit(migrate());
+        Future<int[]> future = pool.submit(migrate());
+        result = future.get();
       }
-      int[] report = result.get();
 
       LOG.info("=== End Social Membership * {} memberships migrated successfully, {} errors, in {} miliseconds",
-          report[0], report[1], System.currentTimeMillis() - startTime);
+          result[0], result[1], System.currentTimeMillis() - startTime);
     } catch (Exception ex) {
       LOG.error("error during migrate social membership *", ex);
       throw new CustomChangeException(ex);
     }
   }
 
-  private Callable<int[]> migrateJDBC(Database database) {
-    return new Callable<int[]>() {
-      @Override
-      public int[] call() throws Exception {
-        JdbcConnection dbConn = (JdbcConnection) database.getConnection();
-        boolean autoCommit = dbConn.getAutoCommit();
+  private int[] migrateJDBC(Database database) throws Exception {
+    JdbcConnection dbConn = (JdbcConnection) database.getConnection();
+    boolean autoCommit = dbConn.getAutoCommit();
 
-        int count = 0;
-        int error = 0;
-        ResultSet groupSet = null;
+    int count = 0;
+    int error = 0;
+    ResultSet groupSet = null;
+    try {
+      dbConn.setAutoCommit(false);
+      insertStm = dbConn.prepareStatement(INSERT_SPACE_MEMBER);
+      userStm = dbConn.prepareStatement(USER_IN_GROUP_QUERY);
+      spaceStm = dbConn.prepareStatement(SPACE_QUERY);
+
+      groupSet = getGroupSet(dbConn);
+      while (groupSet.next()) {
+        long groupId = groupSet.getLong(GROUP_ID);
+        String groupName = groupSet.getString(GROUP_NAME);
+
+        Long spaceId = getSpaceId("/spaces/" + groupName);
+        if (spaceId == null) {
+          LOG.warn("Not found space for group {}", groupName);
+          continue;
+        }
+        //
+        LOG.info("Migrating for space {}", "/spaces/" + groupName);
+
+        Set<String> usernames = getUserInGroup(groupId);
+        //
+        LOG.info("There are {} user with membership * in group", usernames.size());
         try {
-          dbConn.setAutoCommit(false);
-
-          groupSet = getGroupSet(dbConn);
-          while (groupSet.next()) {
-            long groupId = groupSet.getLong(GROUP_ID);
-            String groupName = groupSet.getString(GROUP_NAME);
-
-            Space space = getSpaceByGroupId("/spaces/" + groupName);
-            if (space == null) {
-              LOG.warn("Not found space for group {}", groupName);
-              continue;
-            }
-            //
-            LOG.info("Migrating for space {}", space.getGroupId());
-
-            Set<String> usernames = getUserInGroup(groupId, dbConn);
-            //
-            LOG.info("There are {} user with membership * in group", usernames.size());
+          for (String username : usernames) {
+            insertStm.clearParameters();
+            insertStm.setLong(1, spaceId);
+            insertStm.setString(2, username);
+            insertStm.setInt(3, 0);
+            insertStm.setDate(4, new Date(86400000L));
+            insertStm.setBoolean(5, false);
             try {
-              for (String username : usernames) {
-                PreparedStatement stm = dbConn.prepareStatement(INSERT_SPACE_MEMBER);
-                stm.setLong(1, Long.parseLong(space.getId()));
-                stm.setString(2, username);
-                stm.setInt(3, 0);
-                stm.setDate(4, new Date(86400000L));
-                stm.setBoolean(5, false);
-                try {
-                  stm.executeUpdate();
-                  stm.setInt(3, 1);
-                  stm.executeUpdate();
-                  count++;
-                } catch (Exception ex) {
-                  error++;
-                  LOG.error("Error during migrating for user {}", username, ex);
-                  throw ex;
-                }
-              }
-            } finally {
-              dbConn.commit();
+              insertStm.executeUpdate();
+              insertStm.setInt(3, 1);
+              insertStm.executeUpdate();
+              count++;
+            } catch (Exception ex) {
+              error++;
+              LOG.error("Error during migrating for user {}", username, ex);
+              throw ex;
             }
           }
         } finally {
-          try {
-            groupSet.close();
-          } catch (SQLException e) {
-            LOG.error("Error during close ResultSet  - Cause : " + e.getMessage(), e);
-          }
-
-          try {
-            dbConn.setAutoCommit(autoCommit);
-          } catch (DatabaseException e) {
-            LOG.error("Error during set AutoCommit  - Cause : " + e.getMessage(), e);
-          }
+          dbConn.commit();
         }
-        return new int[] {count, error};
       }
-    };
+    } finally {
+      try {
+        groupSet.close();
+      } catch (SQLException e) {
+        LOG.error("Error during close ResultSet  - Cause : " + e.getMessage(), e);
+      }
+
+      try {
+        dbConn.setAutoCommit(autoCommit);
+      } catch (DatabaseException e) {
+        LOG.error("Error during set AutoCommit  - Cause : " + e.getMessage(), e);
+      }
+    }
+    return new int[] {count, error};
   }
 
-  private Set<String> getUserInGroup(long groupId, JdbcConnection dbConn) throws Exception {
+  private Long getSpaceId(String groupId) throws Exception {
+    ResultSet spaceSet = null;
+    try {
+      spaceStm.clearParameters();
+      spaceStm.setString(1, groupId);
+
+      spaceSet = spaceStm.executeQuery();
+      if (spaceSet.next()) {
+        return spaceSet.getLong(SPACE_ID);
+      }
+    } finally {
+      try {
+        spaceSet.close();
+      } catch (SQLException e) {
+        LOG.error("Error during close ResultSet  - Cause : " + e.getMessage(), e);
+      }
+    }
+    return -1L;
+  }
+
+  private Set<String> getUserInGroup(long groupId) throws Exception {
     Set<String> usernames = new HashSet<>();
     ResultSet userSet = null;
     try {
-      PreparedStatement groupQueryStm = dbConn.prepareStatement(USER_IN_GROUP_QUERY);
-      groupQueryStm.setLong(1, groupId);
+      userStm.clearParameters();
+      userStm.setLong(1, groupId);
 
-      userSet = groupQueryStm.executeQuery();
+      userSet = userStm.executeQuery();
       while (userSet.next()) {
         usernames.add(userSet.getString(USER_NAME));
       }

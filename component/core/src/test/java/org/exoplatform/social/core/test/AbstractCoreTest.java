@@ -230,7 +230,6 @@ public abstract class AbstractCoreTest extends BaseExoTestCase {
   protected void addUserToGroupWithMembership(String remoteId, String groupId, String membership) {
     OrganizationService organizationService = SpaceUtils.getOrganizationService();
     try {
-      // TODO: checks whether user is already manager?
       MembershipHandler membershipHandler = organizationService.getMembershipHandler();
       Membership found = membershipHandler.findMembershipByUserGroupAndType(remoteId, groupId, membership);
       if (found != null) {
