@@ -121,7 +121,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
       spaceFilter.setSpaceNameSearchCondition(q);
     }
     String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
-    if (userACL.getSuperUser().equals(authenticatedUser)) {
+    if (spaceService.isSuperManager(authenticatedUser)) {
       listAccess = spaceFilter != null ? spaceService.getAllSpacesByFilter(spaceFilter):
          spaceService.getAllSpacesWithListAccess();
     } else {
@@ -213,7 +213,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (Space.HIDDEN.equals(space.getVisibility()) && ! spaceService.isMember(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (Space.HIDDEN.equals(space.getVisibility()) && ! spaceService.isMember(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     return EntityBuilder.getResponse(EntityBuilder.buildEntityFromSpace(space, authenticatedUser, uriInfo.getPath(), expand), uriInfo, RestUtils.getJsonMediaType(), Response.Status.OK);
@@ -246,7 +246,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     
     Space space = spaceService.getSpaceByPrettyName(id);
-    if (space == null || (Space.HIDDEN.equals(space.getVisibility()) && ! spaceService.isMember(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (Space.HIDDEN.equals(space.getVisibility()) && ! spaceService.isMember(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
     Identity identity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getId(), true);
@@ -307,7 +307,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     //
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (! spaceService.isManager(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (! spaceService.isManager(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     if(model.getGroupId() != null && model.getGroupId().length() > 0) {
@@ -342,7 +342,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     //
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (! spaceService.isManager(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (! spaceService.isManager(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     spaceService.deleteSpace(space);
@@ -379,7 +379,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     //
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     
@@ -427,7 +427,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     //
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     
@@ -490,7 +490,7 @@ public class SpaceRestResourcesV1 implements SpaceRestResources {
     //
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     Space space = spaceService.getSpaceById(id);
-    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! userACL.getSuperUser().equals(authenticatedUser))) {
+    if (space == null || (! spaceService.isMember(space, authenticatedUser) && ! spaceService.isSuperManager(authenticatedUser))) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     

@@ -16,17 +16,8 @@
  */
 package org.exoplatform.social.rest.impl.identity;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +30,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.model.Profile;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
@@ -52,7 +47,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.manager.RelationshipManager;
 import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.relationship.model.Relationship;
-import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.rest.api.EntityBuilder;
 import org.exoplatform.social.rest.api.IdentityRestResources;
@@ -63,6 +57,12 @@ import org.exoplatform.social.rest.entity.DataEntity;
 import org.exoplatform.social.rest.entity.IdentityEntity;
 import org.exoplatform.social.rest.entity.ProfileEntity;
 import org.exoplatform.social.service.rest.api.VersionResources;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 
 @Path(VersionResources.VERSION_ONE + "/social/identities")
@@ -133,8 +133,10 @@ public class IdentityRestResourcesV1 implements IdentityRestResources {
                                    @ApiParam(value = "Remote id of the identity", required = true) @QueryParam("remoteId") String remoteId,
                                    @ApiParam(value = "Provider type: space or organization", required = true) @QueryParam("providerId") String providerId,
                                    @ApiParam(value = "Asking for a full representation of a specific subresource if any", required = false) @QueryParam("expand") String expand) throws Exception {
-    
-    if (!RestUtils.isMemberOfAdminGroup()) {
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+
+    //Check permission of current user
+    if (!spaceService.isSuperManager(RestUtils.getCurrentuserName())) { 
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     if ((! providerId.equals(SpaceIdentityProvider.NAME) && ! providerId.equals(OrganizationIdentityProvider.NAME))) {
@@ -310,8 +312,10 @@ public class IdentityRestResourcesV1 implements IdentityRestResources {
   public Response deleteIdentityById(@Context UriInfo uriInfo,
                                      @ApiParam(value = "Identity id which is a UUID such as 40487b7e7f00010104499b339f056aa4", required = true) @PathParam("id") String id,
                                      @ApiParam(value = "Asking for a full representation of a specific subresource if any", required = false) @QueryParam("expand") String expand) throws Exception {
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
 
-    if (! RestUtils.isMemberOfAdminGroup()) {
+    //Check permission of current user
+    if (!spaceService.isSuperManager(RestUtils.getCurrentuserName())) { 
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     

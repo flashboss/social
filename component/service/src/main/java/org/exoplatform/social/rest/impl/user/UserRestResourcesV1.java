@@ -16,7 +16,30 @@
  */
 package org.exoplatform.social.rest.impl.user;
 
-import io.swagger.annotations.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.PortalContainer;
@@ -43,19 +66,19 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.rest.api.EntityBuilder;
 import org.exoplatform.social.rest.api.RestUtils;
 import org.exoplatform.social.rest.api.UserRestResources;
-import org.exoplatform.social.rest.entity.*;
-import org.exoplatform.social.service.rest.PeopleRestService;
+import org.exoplatform.social.rest.entity.ActivityEntity;
+import org.exoplatform.social.rest.entity.CollectionEntity;
+import org.exoplatform.social.rest.entity.DataEntity;
+import org.exoplatform.social.rest.entity.ProfileEntity;
+import org.exoplatform.social.rest.entity.SpaceEntity;
+import org.exoplatform.social.rest.entity.UserEntity;
 import org.exoplatform.social.service.rest.api.VersionResources;
 
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * 
@@ -144,9 +167,10 @@ public class UserRestResourcesV1 implements UserRestResources {
     if (model.isNotValid()) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
-    
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+
     //Check permission of current user
-    if (!RestUtils.isMemberOfAdminGroup()) {
+    if (!spaceService.isSuperManager(RestUtils.getCurrentuserName())) {
       throw new WebApplicationException(Response.Status.FORBIDDEN);
     }
     
@@ -293,8 +317,9 @@ public class UserRestResourcesV1 implements UserRestResources {
   public Response deleteUserById(@Context UriInfo uriInfo,
                                  @ApiParam(value = "User name", required = true) @PathParam("id") String id,
                                  @ApiParam(value = "Asking for a full representation of a specific subresource if any", required = false) @QueryParam("expand") String expand) throws Exception {
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     //Check permission of current user
-    if (!RestUtils.isMemberOfAdminGroup()) {
+    if (!spaceService.isSuperManager(RestUtils.getCurrentuserName())) {
       throw new WebApplicationException(Response.Status.FORBIDDEN);
     }
     
@@ -405,14 +430,16 @@ public class UserRestResourcesV1 implements UserRestResources {
     if (target == null) {
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+
     //Check permission of authenticated user : he must be an admin or he is the given user
-    String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
-    if (!userACL.getSuperUser().equals(authenticatedUser) && !authenticatedUser.equals(id) ) {
+    String authenticatedUser = RestUtils.getCurrentuserName();
+    if (!spaceService.isSuperManager(authenticatedUser) && !authenticatedUser.equals(id) ) {
       throw new WebApplicationException(Response.Status.FORBIDDEN);
     }
     
     List<DataEntity> spaceInfos = new ArrayList<DataEntity>();
-    ListAccess<Space> listAccess = CommonsUtils.getService(SpaceService.class).getMemberSpaces(id);
+    ListAccess<Space> listAccess = spaceService.getMemberSpaces(id);
     
     for (Space space : listAccess.load(offset, limit)) {
       SpaceEntity spaceInfo = EntityBuilder.buildEntityFromSpace(space, id, uriInfo.getPath(), expand);

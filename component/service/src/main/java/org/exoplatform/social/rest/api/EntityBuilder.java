@@ -191,7 +191,8 @@ public class EntityBuilder {
   public static SpaceEntity buildEntityFromSpace(Space space, String userId, String restPath, String expand) {
     SpaceEntity spaceEntity = new SpaceEntity(space.getId());
     IdentityManager identityManager = CommonsUtils.getService(IdentityManager.class);
-    if (ArrayUtils.contains(space.getMembers(), userId) || RestUtils.isMemberOfAdminGroup()) {
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+    if (ArrayUtils.contains(space.getMembers(), userId) || spaceService.isSuperManager(RestUtils.getCurrentuserName())) {
       spaceEntity.setHref(RestUtils.getRestUrl(SPACES_TYPE, space.getId(), restPath));
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), true);
       LinkEntity identity;
@@ -448,20 +449,20 @@ public class EntityBuilder {
     DataEntity as = new DataEntity();
     IdentityManager identityManager = CommonsUtils.getService(IdentityManager.class);
     Identity owner = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, activity.getStreamOwner(), true);
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     if (owner != null) { //case of user activity
       Relationship relationship = CommonsUtils.getService(RelationshipManager.class).get(authentiatedUsed, owner);
       if (! authentiatedUsed.getId().equals(activity.getPosterId()) //the viewer is not the poster
           && ! authentiatedUsed.getRemoteId().equals(activity.getStreamOwner()) //the viewer is not the owner
           && (relationship == null || ! relationship.getStatus().equals(Relationship.Type.CONFIRMED)) //the viewer has no relationship with the given user
-          && ! RestUtils.isMemberOfAdminGroup()) { //current user is not an administrator  
+          && ! spaceService.isSuperManager(authentiatedUsed.getId())) { //current user is not an administrator  
         return null;
       }
       as.put(RestProperties.TYPE, USER_ACTIVITY_TYPE);
     } else { //case of space activity
-      SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
       owner = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, activity.getStreamOwner(), true);
       Space space = spaceService.getSpaceByPrettyName(owner.getRemoteId());
-      if (space == null || !spaceService.isMember(space, authentiatedUsed.getRemoteId())) { //the viewer is not member of space
+      if (space == null || !(spaceService.isSuperManager(authentiatedUsed.getRemoteId()) || spaceService.isMember(space, authentiatedUsed.getRemoteId()))) { //the viewer is not member of space
         return null;
       }
       as.put(RestProperties.TYPE, SPACE_ACTIVITY_TYPE);

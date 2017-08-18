@@ -179,7 +179,7 @@ public class SpaceMembershipRestResourcesV1 implements SpaceMembershipRestResour
         throw new WebApplicationException(Response.Status.UNAUTHORIZED);
       }
 
-      if (RestUtils.isMemberOfAdminGroup() || spaceService.isManager(givenSpace, authenticatedUser)
+      if (spaceService.isSuperManager(authenticatedUser) || spaceService.isManager(givenSpace, authenticatedUser)
           || (authenticatedUser.equals(user) && givenSpace.getRegistration().equals(Space.OPEN))) {
         spaceService.addMember(givenSpace, user);
         if ("manager".equals(model.getRole())) {
@@ -229,7 +229,7 @@ public class SpaceMembershipRestResourcesV1 implements SpaceMembershipRestResour
     }
     //
     String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
-    if (! authenticatedUser.equals(idParams[1]) && ! RestUtils.isMemberOfAdminGroup() && ! spaceService.isManager(space, authenticatedUser)) {
+    if (! authenticatedUser.equals(idParams[1]) && ! spaceService.isSuperManager(authenticatedUser) && ! spaceService.isManager(space, authenticatedUser)) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     //
@@ -271,7 +271,7 @@ public class SpaceMembershipRestResourcesV1 implements SpaceMembershipRestResour
     }
     //
     String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
-    if (! RestUtils.isMemberOfAdminGroup() && ! spaceService.isManager(space, authenticatedUser)) {
+    if (!spaceService.isSuperManager(authenticatedUser) && ! spaceService.isManager(space, authenticatedUser)) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     //
@@ -323,7 +323,7 @@ public class SpaceMembershipRestResourcesV1 implements SpaceMembershipRestResour
     }
     //
     String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
-    if (! authenticatedUser.equals(targetUser) && ! RestUtils.isMemberOfAdminGroup() && ! spaceService.isManager(space, authenticatedUser)) {
+    if (! authenticatedUser.equals(targetUser) && ! spaceService.isSuperManager(authenticatedUser) && ! spaceService.isManager(space, authenticatedUser)) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     if (spaceService.isOnlyManager(space, targetUser)) {

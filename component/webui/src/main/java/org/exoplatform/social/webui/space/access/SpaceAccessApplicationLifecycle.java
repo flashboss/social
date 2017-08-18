@@ -102,11 +102,11 @@ public class SpaceAccessApplicationLifecycle implements ApplicationLifecycle<Web
       processSpaceAccess(pcontext, remoteId, space);
     }
   }
-  
-  
+
   private boolean inSuperAdminGroup(String remoteId, Space space) {
    //special case when remoteId is super administrator and allow to access
-    return SpaceAccessType.SUPER_ADMINISTRATOR.doCheck(remoteId, space);
+    SpaceService spaceService = Utils.getSpaceService();
+    return spaceService.isSuperManager(remoteId);
   }
   /**
    * It's workaround when runs on the clustering environment

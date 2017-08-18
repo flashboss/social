@@ -34,8 +34,10 @@ import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.commons.utils.ISO8601;
 import org.exoplatform.services.rest.impl.ApplicationContextImpl;
 import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.Identity;
 import org.exoplatform.services.security.IdentityConstants;
 import org.exoplatform.social.rest.entity.DataEntity;
+import org.exoplatform.web.application.RequestContext;
 
 public class RestUtils {
 
@@ -47,8 +49,6 @@ public class RestUtils {
 
   public static final String SUPPORT_TYPE   = "json";
 
-  public static final String ADMIN_GROUP    = "/platform/administrators";
-  
   public static String formatISO8601(Date date) {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(date);
@@ -106,16 +106,20 @@ public class RestUtils {
     }
     return false;
   }
-  
+
   /**
-   * Check if the authenticated user is a member of the admin group
-   * 
-   * @return
+   * Gets current authenticated username
+   *
+   * @return username of type {@link String}
    */
-  public static boolean isMemberOfAdminGroup() {
-    return ConversationState.getCurrent().getIdentity().isMemberOf(ADMIN_GROUP);
+  public static String getCurrentuserName() {
+    Identity currentIdentity = ConversationState.getCurrent() == null ? null : ConversationState.getCurrent().getIdentity();
+    if(currentIdentity == null) {
+      return null;
+    }
+    return currentIdentity.getUserId();
   }
-  
+
   /** 
    * Get base url of rest service
    * 

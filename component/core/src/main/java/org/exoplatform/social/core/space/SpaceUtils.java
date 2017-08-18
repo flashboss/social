@@ -22,6 +22,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
+import org.gatein.common.i18n.LocalizedString;
+import org.gatein.common.util.Tools;
+import org.gatein.pc.api.Portlet;
+import org.gatein.pc.api.PortletInvoker;
+import org.gatein.pc.api.info.MetaInfo;
+import org.gatein.pc.api.info.PortletInfo;
+
+import com.ibm.icu.text.Transliterator;
+
 import org.exoplatform.application.registry.Application;
 import org.exoplatform.application.registry.ApplicationCategory;
 import org.exoplatform.application.registry.ApplicationRegistryService;
@@ -54,7 +64,11 @@ import org.exoplatform.portal.mop.navigation.NodeContext;
 import org.exoplatform.portal.mop.navigation.Scope;
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageService;
-import org.exoplatform.portal.mop.user.*;
+import org.exoplatform.portal.mop.user.UserNavigation;
+import org.exoplatform.portal.mop.user.UserNode;
+import org.exoplatform.portal.mop.user.UserNodeFilterConfig;
+import org.exoplatform.portal.mop.user.UserPortal;
+import org.exoplatform.portal.mop.user.UserPortalContext;
 import org.exoplatform.portal.pom.spi.gadget.Gadget;
 import org.exoplatform.portal.webui.portal.UIPortal;
 import org.exoplatform.portal.webui.util.Util;
@@ -72,6 +86,8 @@ import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserHandler;
 import org.exoplatform.services.organization.UserStatus;
 import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.IdentityRegistry;
+import org.exoplatform.services.security.MembershipEntry;
 import org.exoplatform.social.common.router.ExoRouter;
 import org.exoplatform.social.common.router.ExoRouter.Route;
 import org.exoplatform.social.core.identity.model.Identity;
@@ -80,15 +96,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.webui.application.WebuiRequestContext;
-
-import org.gatein.common.i18n.LocalizedString;
-import org.gatein.common.util.Tools;
-import org.gatein.pc.api.Portlet;
-import org.gatein.pc.api.PortletInvoker;
-import org.gatein.pc.api.info.MetaInfo;
-import org.gatein.pc.api.info.PortletInfo;
-
-import com.ibm.icu.text.Transliterator;
 
 /**
  * SpaceUtils Utility for working with space
@@ -1748,4 +1755,64 @@ public class SpaceUtils {
     
     return new ArrayList<String>(userNames);
   }
+
+  /**
+   * Add volatile memberships MANAGER and MEMBER to current identity of user
+   * 
+   * @param identity identity of super spaces manager. This parameter is of type
+   *          {@link org.exoplatform.services.security.Identity}
+   * @param groupId space group id of type {@link String}
+   */
+  public static void addMembershipsToSuperManagerOfSpace(org.exoplatform.services.security.Identity identity, String groupId) {
+    if (StringUtils.isBlank(groupId)) {
+      throw new IllegalArgumentException("Group id is empty");
+    }
+    if (identity == null) {
+      throw new IllegalArgumentException("User identity is empty");
+    }
+    if (!groupId.startsWith(SPACE_GROUP)) {
+      throw new IllegalArgumentException("groupId '" + groupId + "' is not a space group");
+    }
+    MembershipEntry managerMembership = new MembershipEntry(groupId, getUserACL().getAdminMSType());
+    if(!identity.isMemberOf(managerMembership)) {
+      identity.getMemberships().add(managerMembership);
+    }
+    MembershipEntry memberMembership = new MembershipEntry(groupId, SpaceUtils.MEMBER);
+    if(!identity.isMemberOf(memberMembership)) {
+      identity.getMemberships().add(memberMembership);
+    }
+  }
+
+  /**
+   * Update already authenticated super users to give them the adequate
+   * memberships to access the a space identified by group id
+   * 
+   * @param groupId space group id
+   */
+  public static void addMembershipsToSuperManagersOfSpace(String groupId) {
+    if (StringUtils.isBlank(groupId)) {
+      throw new IllegalArgumentException("Group id is empty");
+    }
+    if (!groupId.startsWith(SPACE_GROUP)) {
+      throw new IllegalArgumentException("groupId '" + groupId + "' is not a space group");
+    }
+    ExoContainer container = ExoContainerContext.getCurrentContainer();
+
+    SpaceService spaceService = (SpaceService) container.getComponentInstanceOfType(SpaceService.class);
+    IdentityRegistry identityRegistry = (IdentityRegistry) container.getComponentInstanceOfType(IdentityRegistry.class);
+
+    List<MembershipEntry> superManagersRoles = spaceService.getSuperManagersRoles();
+    if (superManagersRoles == null || superManagersRoles.isEmpty()) {
+      return;
+    }
+    // Get identities of all authenticated users
+    Set<String> identities = identityRegistry.getIdentities();
+    for (String userId : identities) {
+      if (spaceService.isSuperManager(userId)) {
+        org.exoplatform.services.security.Identity identity = identityRegistry.getIdentity(userId);
+        addMembershipsToSuperManagerOfSpace(identity, groupId);
+      }
+    }
+  }
+
 }

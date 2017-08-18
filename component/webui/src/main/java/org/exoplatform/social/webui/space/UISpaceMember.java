@@ -398,7 +398,7 @@ public class UISpaceMember extends UIContainer {
    * @throws Exception
    */
   public boolean isSuperUser() throws Exception {
-    return getRemoteUser().equals(getUserACL().getSuperUser());
+    return spaceService.isSuperManager(getRemoteUser());
   }
 
   /**
