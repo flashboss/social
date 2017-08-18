@@ -47,7 +47,6 @@ import org.exoplatform.social.core.storage.cache.model.key.SpaceRefKey;
 import org.exoplatform.social.core.storage.cache.model.key.SpaceType;
 import org.exoplatform.social.core.storage.cache.selector.IdentityCacheSelector;
 import org.exoplatform.social.core.storage.cache.selector.ScopeCacheSelector;
-import org.exoplatform.social.core.storage.impl.SpaceStorageImpl;
 
 /**
  * @author <a href="mailto:alain.defrance@exoplatform.com">Alain Defrance</a>
@@ -71,7 +70,7 @@ public class CachedSpaceStorage implements SpaceStorage {
   private final FutureExoCache<SpaceFilterKey, IntegerData, ServiceContext<IntegerData>> spacesCountCache;
   private final FutureExoCache<ListSpacesKey, ListSpacesData, ServiceContext<ListSpacesData>> spacesCache;
 
-  private final SpaceStorageImpl storage;
+  private final SpaceStorage storage;
   private CachedActivityStorage cachedActivityStorage;
   private CachedIdentityStorage cachedIdentityStorage;
 
@@ -192,7 +191,7 @@ public class CachedSpaceStorage implements SpaceStorage {
 
   }
 
-  public CachedSpaceStorage(final SpaceStorageImpl storage, final SocialStorageCacheService cacheService) {
+  public CachedSpaceStorage(final SpaceStorage storage, final SocialStorageCacheService cacheService) {
 
     this.storage = storage;
 
@@ -1385,41 +1384,11 @@ public class CachedSpaceStorage implements SpaceStorage {
   @Override
   public void updateSpaceAccessed(String remoteId, Space space) throws SpaceStorageException {
     storage.updateSpaceAccessed(remoteId, space);
-
-    SpaceFilterKey key = new SpaceFilterKey(remoteId, new SpaceFilter(remoteId, null), SpaceType.LATEST_ACCESSED);
-    // this call is requesting 10 because it's already cached by previous calls (FROM UI layer)
-    // thus, this call will not request database.
-    ListSpacesKey listKey = new ListSpacesKey(key, 0, 10);
-    ListSpacesData listSpacesData = exoSpacesCache.get(listKey);
-    if(listSpacesData != null) {
-      if (listSpacesData.getIds() != null && !listSpacesData.getIds().isEmpty()
-          && !listSpacesData.getIds().get(0).getId().equals(space.getId())) {
-        removeCacheEntry(remoteId, SpaceType.LATEST_ACCESSED, 0, 10);
-      }
-    }
   }
 
   @Override
   public List<Space> getLastAccessedSpace(final SpaceFilter filter, final int offset, final int limit) throws SpaceStorageException {
-    //
-    SpaceFilterKey key = new SpaceFilterKey(filter.getRemoteId(), filter, SpaceType.LATEST_ACCESSED);
-    ListSpacesKey listKey = new ListSpacesKey(key, offset, limit);
-
-    //
-    ListSpacesData keys = spacesCache.get(
-        new ServiceContext<ListSpacesData>() {
-          public ListSpacesData execute() {
-            if (limit == 0) {
-              return buildIds(Collections.emptyList());
-            }
-            List<Space> got = storage.getLastAccessedSpace(filter, offset, limit);
-            return buildSimpleIds(got);
-          }
-        },
-        listKey);
-
-    //
-    return buildSimpleSpaces(keys);
+    return storage.getLastAccessedSpace(filter, offset, limit);
   }
 
   public List<Space> getLastSpaces(final int limit) {

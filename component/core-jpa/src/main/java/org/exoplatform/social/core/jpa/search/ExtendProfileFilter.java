@@ -48,7 +48,7 @@ public class ExtendProfileFilter extends ProfileFilter {
 
   public ExtendProfileFilter(ProfileFilter delegate) {
     if (delegate == null) {
-      delegate = new ProfileFilter();
+      this.delegate = new ProfileFilter();
     } else {
       this.delegate = delegate;
     }

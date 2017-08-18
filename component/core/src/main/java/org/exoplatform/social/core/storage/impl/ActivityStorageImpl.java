@@ -137,7 +137,7 @@ public class ActivityStorageImpl extends AbstractStorage implements ActivityStor
      this.streamStorage = getStreamStorage();
      this.activityProcessors = new TreeSet<ActivityProcessor>(processorComparator());
    }
-  
+
   private ActivityStreamStorage getStreamStorage() {
     if (streamStorage == null) {
       streamStorage = (ActivityStreamStorage) PortalContainer.getInstance().getComponentInstanceOfType(ActivityStreamStorage.class);
@@ -838,7 +838,11 @@ public class ActivityStorageImpl extends AbstractStorage implements ActivityStor
       ActivityEntity commentEntity = _findById(ActivityEntity.class, comment.getId());
       ActivityEntity parentActivityEntity = commentEntity.getParentActivity();
 
-      return getStorage().getActivity(parentActivityEntity.getId());
+      if(parentActivityEntity != null) {
+        return getStorage().getActivity(parentActivityEntity.getId());
+      } else {
+        return null;
+      }
       
     }
     catch (NodeNotFoundException e) {

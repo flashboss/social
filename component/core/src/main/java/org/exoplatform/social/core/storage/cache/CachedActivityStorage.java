@@ -48,7 +48,6 @@ import org.exoplatform.social.core.storage.cache.selector.ActivityOwnerCacheSele
 import org.exoplatform.social.core.storage.cache.selector.ActivityStreamOwnerCacheSelector;
 import org.exoplatform.social.core.storage.cache.selector.ScopeCacheSelector;
 import org.exoplatform.social.core.storage.impl.ActivityBuilderWhere;
-import org.exoplatform.social.core.storage.impl.ActivityStorageImpl;
 
 /**
  * @author <a href="mailto:alain.defrance@exoplatform.com">Alain Defrance</a>
@@ -67,15 +66,15 @@ public class CachedActivityStorage implements ActivityStorage {
   private final FutureExoCache<ActivityCountKey, IntegerData, ServiceContext<IntegerData>> activitiesCountCache;
   private final FutureExoCache<ListActivitiesKey, ListActivitiesData, ServiceContext<ListActivitiesData>> activitiesCache;
 
-  private ActivityStorageImpl storage;
+  private ActivityStorage storage;
   
   /**
    * Register the other Activity Manager 
    * @param baseComponent
    */
   public void addPlugin(BaseComponentPlugin baseComponent) {
-    if (baseComponent instanceof ActivityStorageImpl) {
-      this.storage = (ActivityStorageImpl) baseComponent;
+    if (baseComponent instanceof ActivityStorage) {
+      this.storage = (ActivityStorage) baseComponent;
     }
   }
 
@@ -189,11 +188,10 @@ public class CachedActivityStorage implements ActivityStorage {
 
   }
 
-  public CachedActivityStorage(final ActivityStorageImpl storage, final SocialStorageCacheService cacheService) {
+  public CachedActivityStorage(final ActivityStorage storage, final SocialStorageCacheService cacheService) {
 
     //
     this.storage = storage;
-    this.storage.setStorage(this);
 
     //
     this.exoActivityCache = cacheService.getActivityCache();

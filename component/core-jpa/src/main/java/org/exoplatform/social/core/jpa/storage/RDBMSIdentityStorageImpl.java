@@ -26,6 +26,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.exoplatform.commons.file.services.FileStorageException;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -61,7 +62,6 @@ import org.exoplatform.social.core.relationship.model.Relationship.Type;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.storage.IdentityStorageException;
-import org.exoplatform.social.core.storage.impl.IdentityStorageImpl;
 import org.exoplatform.social.core.storage.impl.StorageUtils;
 
 /**
@@ -70,7 +70,7 @@ import org.exoplatform.social.core.storage.impl.StorageUtils;
  *          exo@exoplatform.com
  * Oct 5, 2015  
  */
-public class RDBMSIdentityStorageImpl extends IdentityStorageImpl {
+public class RDBMSIdentityStorageImpl implements IdentityStorage {
 
   private static final Log LOG = ExoLogger.getLogger(RDBMSIdentityStorageImpl.class);
 
