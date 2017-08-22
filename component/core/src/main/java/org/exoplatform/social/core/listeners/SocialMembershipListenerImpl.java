@@ -16,10 +16,7 @@
  */
 package org.exoplatform.social.core.listeners;
 
-import java.util.List;
-
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.portal.config.UserACL;
@@ -28,9 +25,6 @@ import org.exoplatform.services.organization.MembershipEventListener;
 import org.exoplatform.services.organization.MembershipTypeHandler;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.security.ConversationState;
-import org.exoplatform.services.security.Identity;
-import org.exoplatform.services.security.IdentityRegistry;
-import org.exoplatform.services.security.MembershipEntry;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -46,7 +40,6 @@ import org.exoplatform.social.core.storage.api.IdentityStorage;
  * @since Jan 11, 2012
  */
 public class SocialMembershipListenerImpl extends MembershipEventListener {
-  private static final int LIMIT = 100;
 
   public SocialMembershipListenerImpl() {
     
@@ -120,32 +113,7 @@ public class SocialMembershipListenerImpl extends MembershipEventListener {
         } else if (MembershipTypeHandler.ANY_MEMBERSHIP_TYPE.equalsIgnoreCase(m.getMembershipType())) {
           clearIdentityCaching();
         }
-
-        // If the user is already authenticated, update his identity to receive the super manager status
-        IdentityRegistry identityRegistry = (IdentityRegistry) container.getComponentInstanceOfType(IdentityRegistry.class);
-        Identity identity = identityRegistry.getIdentity(userName);
-        if (identity != null) {
-          MembershipEntry newlyCreatedMembershipEntry = new MembershipEntry(m.getGroupId(), m.getMembershipType());
-          if (!identity.getMemberships().contains(newlyCreatedMembershipEntry)) {
-            identity.getMemberships().add(newlyCreatedMembershipEntry);
-          }
-          List<MembershipEntry> superManagersRoles = spaceService.getSuperManagersRoles();
-          for (MembershipEntry superManagersRole : superManagersRoles) {
-            if (!identity.isMemberOf(superManagersRole)) {
-              ListAccess<Space> allSpacesListAccess = spaceService.getAllSpacesWithListAccess();
-              int size = allSpacesListAccess.getSize();
-              int offset = 0;
-              while (offset < size) {
-                Space[] spaces = allSpacesListAccess.load(offset, LIMIT);
-                for (Space spaceTmp : spaces) {
-                  SpaceUtils.addMembershipsToSuperManagerOfSpace(identity, spaceTmp.getGroupId());
-                }
-                offset += LIMIT;
-              }
-            }
-          }
-        }
-
+        
         //Refresh GroupNavigation
         SpaceUtils.refreshNavigation();
       }

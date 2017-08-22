@@ -92,7 +92,7 @@ public class SpaceAccessApplicationLifecycle implements ApplicationLifecycle<Web
       if (space != null && remoteId != null) {
         addMembershipToIdentity(remoteId, space);
       
-        if (inSuperAdminGroup(remoteId, space) 
+        if (Utils.getSpaceService().isSuperManager(remoteId) 
             || SpaceUtils.isUserHasMembershipTypesInGroup(remoteId, space.getGroupId(), MembershipTypeHandler.ANY_MEMBERSHIP_TYPE)) {
           return;
         }
@@ -103,11 +103,6 @@ public class SpaceAccessApplicationLifecycle implements ApplicationLifecycle<Web
     }
   }
 
-  private boolean inSuperAdminGroup(String remoteId, Space space) {
-   //special case when remoteId is super administrator and allow to access
-    SpaceService spaceService = Utils.getSpaceService();
-    return spaceService.isSuperManager(remoteId);
-  }
   /**
    * It's workaround when runs on the clustering environment
    * 
@@ -119,17 +114,19 @@ public class SpaceAccessApplicationLifecycle implements ApplicationLifecycle<Web
     if (identity != null) {
       
       SpaceService spaceService = Utils.getSpaceService();
+      boolean isSuperManager = spaceService.isSuperManager(remoteId);
+
       boolean isMember = spaceService.isMember(space, remoteId);
       //add membership's member to Identity if it's absent
       MembershipEntry me = new MembershipEntry(space.getGroupId(), SpaceUtils.MEMBER);
-      if (isMember && !identity.isMemberOf(me)) {
+      if ((isMember || isSuperManager) && !identity.isMemberOf(me)) {
         identity.getMemberships().add(me);
       }
       
       //add membership's manager to Identity if it's absent
       boolean isManager = spaceService.isManager(space, remoteId);
       me = new MembershipEntry(space.getGroupId(), SpaceUtils.MANAGER);
-      if (isManager && !identity.isMemberOf(me))
+      if ((isManager || isSuperManager) && !identity.isMemberOf(me))
         identity.getMemberships().add(me);
     }
   }

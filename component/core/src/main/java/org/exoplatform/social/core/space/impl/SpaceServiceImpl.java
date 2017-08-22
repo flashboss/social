@@ -32,6 +32,7 @@ import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.container.xml.ValueParam;
 import org.exoplatform.container.xml.ValuesParam;
 import org.exoplatform.management.annotations.ManagedBy;
 import org.exoplatform.portal.config.UserACL;
@@ -74,6 +75,8 @@ import org.exoplatform.social.core.storage.api.SpaceStorage;
  */
 @ManagedBy(SpaceServiceManagerBean.class)
 public class SpaceServiceImpl implements SpaceService {
+  private static final String SPACES_SUPER_ADMINISTRATORS_PARAM = "spaces.super.administrators";
+
   private static final Log                     LOG                   = ExoLogger.getLogger(SpaceServiceImpl.class.getName());
 
   public static final String                   MEMBER                   = "member";
@@ -117,7 +120,6 @@ public class SpaceServiceImpl implements SpaceService {
    * @param params
    * @throws Exception
    */
-  @SuppressWarnings("unchecked")
   public SpaceServiceImpl(InitParams params, SpaceStorage spaceStorage, IdentityStorage identityStorage, ActivityStreamStorage streamStorage, UserACL userACL, IdentityRegistry identityRegistry) throws Exception {
 
     this.spaceStorage = spaceStorage;
@@ -126,14 +128,36 @@ public class SpaceServiceImpl implements SpaceService {
     this.identityRegistry = identityRegistry;
     this.userACL = userACL;
 
-    //backward compatible
     if (params != null) {
+      if (params.containsKey(SPACES_SUPER_ADMINISTRATORS_PARAM)) {
+        ValueParam superAdministratorParam = params.getValueParam(SPACES_SUPER_ADMINISTRATORS_PARAM);
+        String superManagersRoles = superAdministratorParam.getValue();
+        if (StringUtils.isNotBlank(superManagersRoles)) {
+          String[] superManagersRolesArray = superManagersRoles.split(",");
+          for (String superManagerRole : superManagersRolesArray) {
+            if (StringUtils.isBlank(superManagerRole)) {
+              continue;
+            }
+            if (!superManagerRole.contains(":/")) {
+              // The variable may not be replaced, so don't log anything
+              if (!superManagerRole.startsWith("$")) {
+                LOG.warn("Invalid entry '" + superManagerRole + "'. A permission expression is expected (mstype:groupId).");
+              }
+            } else {
+              String[] membershipParts = superManagerRole.split(":");
+              this.superManagersRoles.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
+            }
+          }
+        }
+      }
+
+      //backward compatible
       spaceApplicationConfigPlugin = new SpaceApplicationConfigPlugin();
-      Iterator<?> it = params.getValuesParamIterator();
+      Iterator<ValuesParam> it = params.getValuesParamIterator();
 
       boolean deprecatedConfiguration = false;
       while (it.hasNext()) {
-        ValuesParam param = (ValuesParam) it.next();
+        ValuesParam param = it.next();
         String name = param.getName();
         if (name.endsWith("homeNodeApp")) {
           String homeNodeApp = param.getValue();
@@ -163,35 +187,11 @@ public class SpaceServiceImpl implements SpaceService {
             spaceApplicationConfigPlugin.addToSpaceApplicationList(spaceApplication);
           }
           deprecatedConfiguration = true;
-        } else if (name.equals("spaces.super.administrators")) {
-          List<String> superManagersRoles = param.getValues();
-          if (superManagersRoles != null && !superManagersRoles.isEmpty()) {
-            Iterator<String> administratorsIterator = superManagersRoles.iterator();
-            while (administratorsIterator.hasNext()) {
-              String administrator = administratorsIterator.next();
-              if (StringUtils.isBlank(administrator)) {
-                administratorsIterator.remove();
-              }
-              if (!administrator.contains(":/")) {
-                // The variable may not be replaced, so don't log anything
-                if (!administrator.startsWith("$")) {
-                  LOG.warn("Invalid entry '" + administrator + "'. A permission expression is expected (mstype:groupId).");
-                }
-                administratorsIterator.remove();
-              }
-            }
-          }
-          if (superManagersRoles != null && !superManagersRoles.isEmpty()) {
-            for (String superManagerRole : superManagersRoles) {
-              String[] membershipParts = superManagerRole.split(":");
-              this.superManagersRoles.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
-            }
-          }
         }
       }
       if (deprecatedConfiguration) {
         LOG.warn("The SpaceService configuration you attempt to use is deprecated, please update it by"
-            + "using external-component-plugins configuration");
+            + " using external-component-plugins configuration");
       }
     }
 
@@ -1631,17 +1631,6 @@ public class SpaceServiceImpl implements SpaceService {
     }
     String[] membershipParts = permissionExpression.split(":");
     superManagersRoles.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
-
-    ListAccess<Space> allSpacesListAccess = getAllSpacesWithListAccess();
-    int size = allSpacesListAccess.getSize();
-    int offset = 0;
-    while (offset < size) {
-      Space[] spaces = allSpacesListAccess.load(offset, LIMIT);
-      for (Space space : spaces) {
-        SpaceUtils.addMembershipsToSuperManagersOfSpace(space.getGroupId());
-      }
-      offset += LIMIT;
-    }
   }
 
   /**

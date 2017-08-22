@@ -43,7 +43,6 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.common.lifecycle.SocialChromatticLifeCycle;
 import org.exoplatform.social.common.service.utils.TraceElement;
-import org.exoplatform.social.core.space.spi.SpaceService;
 
 /**
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Oct
@@ -77,11 +76,11 @@ public class SocialUpdaterRest implements ResourceContainer {
     
     RestChecker.checkAuthenticatedRequest();
     
+    UserACL acl = CommonsUtils.getService(UserACL.class);
     String currentUser = ConversationState.getCurrent().getIdentity().getUserId();
-    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-
+    
     //Check if the current user is a super user
-    if (!spaceService.isSuperManager(currentUser)) {
+    if (! acl.getSuperUser().equals(currentUser)) {
       LOG.warn("You don't have permission to update the model.");
       throw new WebApplicationException(Response.Status.FORBIDDEN);
     }

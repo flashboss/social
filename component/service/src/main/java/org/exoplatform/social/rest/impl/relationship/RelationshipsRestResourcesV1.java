@@ -47,7 +47,6 @@ import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvide
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.manager.RelationshipManager;
 import org.exoplatform.social.core.relationship.model.Relationship;
-import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.rest.api.EntityBuilder;
 import org.exoplatform.social.rest.api.RelationshipsRestResources;
 import org.exoplatform.social.rest.api.RestProperties;
@@ -87,9 +86,6 @@ public class RelationshipsRestResourcesV1 implements RelationshipsRestResources 
     limit = limit > 0 ? limit : RestUtils.getLimit(uriInfo);
     
     RelationshipManager relationshipManager = CommonsUtils.getService(RelationshipManager.class);
-    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-
-    //Check permission of current user
     Relationship.Type type;
     try {
       type = Relationship.Type.valueOf(status.toUpperCase());
@@ -99,7 +95,7 @@ public class RelationshipsRestResourcesV1 implements RelationshipsRestResources 
     
     List<Relationship> relationships = new ArrayList<Relationship>();
     int size = 0;
-    if (identityId != null & spaceService.isSuperManager(RestUtils.getCurrentuserName())) {
+    if (identityId != null & RestUtils.isMemberOfAdminGroup()) {
       Identity identity = CommonsUtils.getService(IdentityManager.class).getIdentity(identityId, false);
       if (identity == null) {
         throw new WebApplicationException(Response.Status.PRECONDITION_FAILED);
@@ -143,9 +139,8 @@ public class RelationshipsRestResourcesV1 implements RelationshipsRestResources 
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     //
-    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-    String authenticatedUser = RestUtils.getCurrentuserName();
-    if (! spaceService.isSuperManager(authenticatedUser) && ! authenticatedUser.equals(senderRemoteId) && ! authenticatedUser.equals(receiverRemoteId)) {
+    String authenticatedUser = ConversationState.getCurrent().getIdentity().getUserId();
+    if (! RestUtils.isMemberOfAdminGroup() && ! authenticatedUser.equals(senderRemoteId) && ! authenticatedUser.equals(receiverRemoteId)) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
     //
@@ -277,8 +272,7 @@ public class RelationshipsRestResourcesV1 implements RelationshipsRestResources 
    * @return
    */
   private boolean hasPermissionOnRelationship(Identity authenticatedUser, Relationship relationship) {
-    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-    if (spaceService.isSuperManager(authenticatedUser.getId())) return true;
+    if (RestUtils.isMemberOfAdminGroup()) return true;
     if (authenticatedUser.getId().equals(relationship.getSender().getId())
         || authenticatedUser.getId().equals(relationship.getReceiver().getId())) {
       return true;

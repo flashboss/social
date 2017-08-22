@@ -383,10 +383,10 @@
       </component-plugin>
     </component-plugins>
     <init-params>
-      <values-param>
+      <value-param>
         <name>spaces.super.administrators</name>
         <value>${exo.social.spaces.administrators}</value>
-      </values-param>
+      </value-param>
     </init-params>
   </component>
 
@@ -835,24 +835,5 @@
       </init-params>
     </component-plugin>
   </external-component-plugins>
-
-  <external-component-plugins>
-    <target-component>org.exoplatform.services.listener.ListenerService</target-component>
-    <component-plugin>
-      <name>exo.core.security.ConversationRegistry.register</name>
-      <set-method>addListener</set-method>
-      <type>org.exoplatform.social.core.listeners.SpaceManagersAuthenticationListener</type>
-      <description>Update user memberships dynamically for spaces super managers</description>
-    </component-plugin>
-  </external-component-plugins>
-
-  <external-component-plugins>
-    <target-component>org.exoplatform.social.core.space.spi.SpaceService</target-component>
-    <component-plugin>
-      <name>SpaceManagersAuthenticationListener</name>
-      <set-method>addSpaceListener</set-method>
-      <type>org.exoplatform.social.core.listeners.SpaceManagersLifecycleListener</type>
-    </component-plugin>
-  </external-component-plugins>    
 
 </configuration>
