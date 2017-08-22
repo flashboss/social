@@ -28,10 +28,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.ArrayUtils;
+
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.rest.ApplicationContext;
 import org.exoplatform.services.rest.impl.ApplicationContextImpl;
@@ -59,7 +60,6 @@ import org.exoplatform.social.rest.entity.ProfileEntity;
 import org.exoplatform.social.rest.entity.RelationshipEntity;
 import org.exoplatform.social.rest.entity.SpaceEntity;
 import org.exoplatform.social.rest.entity.SpaceMembershipEntity;
-import org.exoplatform.social.rest.entity.UserEntity;
 import org.exoplatform.social.service.rest.api.VersionResources;
 
 public class EntityBuilder {
@@ -192,7 +192,7 @@ public class EntityBuilder {
     SpaceEntity spaceEntity = new SpaceEntity(space.getId());
     IdentityManager identityManager = CommonsUtils.getService(IdentityManager.class);
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-    if (ArrayUtils.contains(space.getMembers(), userId) || spaceService.isSuperManager(RestUtils.getCurrentuserName())) {
+    if (ArrayUtils.contains(space.getMembers(), userId) || spaceService.isSuperManager(userId)) {
       spaceEntity.setHref(RestUtils.getRestUrl(SPACES_TYPE, space.getId(), restPath));
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), true);
       LinkEntity identity;
@@ -455,7 +455,7 @@ public class EntityBuilder {
       if (! authentiatedUsed.getId().equals(activity.getPosterId()) //the viewer is not the poster
           && ! authentiatedUsed.getRemoteId().equals(activity.getStreamOwner()) //the viewer is not the owner
           && (relationship == null || ! relationship.getStatus().equals(Relationship.Type.CONFIRMED)) //the viewer has no relationship with the given user
-          && ! spaceService.isSuperManager(authentiatedUsed.getId())) { //current user is not an administrator  
+          && ! RestUtils.isMemberOfAdminGroup()) { //current user is not an administrator  
         return null;
       }
       as.put(RestProperties.TYPE, USER_ACTIVITY_TYPE);

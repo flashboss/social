@@ -26,7 +26,7 @@ public class SpaceServiceManagerBean {
 
   /**
    * Gets the list of permission expressions of space super managers.
-   * See {@link SpaceService#getSuperManagersRoles()}
+   * See {@link SpaceService#getSuperManagersMemberships()}
    * 
    * @return {@link List} of type {@link String}
    */
@@ -34,23 +34,35 @@ public class SpaceServiceManagerBean {
   @ManagedDescription("Get Spaces super administrators")
   @Impact(ImpactType.READ)
   public List<String> getSpaceManager() {
-    return spaceService.getSuperManagersRoles()
+    return spaceService.getSuperManagersMemberships()
                        .stream()
                        .map(membership -> membership.getMembershipType() + ":" + membership.getGroup())
                        .collect(Collectors.toList());
   }
 
   /**
-   * See {@link SpaceService#addSuperManagersRoles(String)}
+   * See {@link SpaceService#addSuperManagersMembership(String)}
    * 
    * @param permissionExpression permission expression of type {@link String}
    * 
-   * @throws Exception
    */
   @Managed
-  @ManagedDescription("Add Spaces super administrators role")
+  @ManagedDescription("Add Spaces super managers membership")
   @Impact(ImpactType.WRITE)
-  public void addSpaceManager(@ManagedDescription("Spaces super manger role") @ManagedName("permissionExpression") String permissionExpression) throws Exception {
-    spaceService.addSuperManagersRoles(permissionExpression);
+  public void addSpaceManager(@ManagedDescription("Spaces super manger role") @ManagedName("permissionExpression") String permissionExpression) {
+    spaceService.addSuperManagersMembership(permissionExpression);
+  }
+
+  /**
+   * See {@link SpaceService#removeSuperManagersMembership(String)}
+   * 
+   * @param permissionExpression permission expression of type {@link String}
+   * 
+   */
+  @Managed
+  @ManagedDescription("Remove Spaces super managers membership")
+  @Impact(ImpactType.WRITE)
+  public void removeSpaceManager(@ManagedDescription("Spaces super manger memberships") @ManagedName("permissionExpression") String permissionExpression) {
+    spaceService.addSuperManagersMembership(permissionExpression);
   }
 }

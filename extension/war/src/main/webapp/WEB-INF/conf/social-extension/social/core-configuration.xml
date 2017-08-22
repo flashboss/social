@@ -385,7 +385,7 @@
     <init-params>
       <value-param>
         <name>spaces.super.administrators</name>
-        <value>${exo.social.spaces.administrators}</value>
+        <value>${social.spaces.administrators:}</value>
       </value-param>
     </init-params>
   </component>

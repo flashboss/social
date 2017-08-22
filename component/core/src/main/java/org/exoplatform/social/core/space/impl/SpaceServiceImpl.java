@@ -89,8 +89,6 @@ public class SpaceServiceImpl implements SpaceService {
 
   private IdentityStorage                      identityStorage;
   
-  private ActivityStreamStorage                streamStorage;
-
   private OrganizationService                  orgService               = null;
 
   private UserACL                              userACL                  = null;
@@ -111,7 +109,7 @@ public class SpaceServiceImpl implements SpaceService {
   /** The limit for list access loading. */
   private static final int                   LIMIT = 200;
 
-  private List<MembershipEntry> superManagersRoles = new ArrayList<>();
+  private List<MembershipEntry> superManagersMemberships = new ArrayList<>();
 
   /**
    * SpaceServiceImpl constructor Initialize
@@ -124,28 +122,24 @@ public class SpaceServiceImpl implements SpaceService {
 
     this.spaceStorage = spaceStorage;
     this.identityStorage = identityStorage;
-    this.streamStorage = streamStorage;
     this.identityRegistry = identityRegistry;
     this.userACL = userACL;
 
     if (params != null) {
       if (params.containsKey(SPACES_SUPER_ADMINISTRATORS_PARAM)) {
         ValueParam superAdministratorParam = params.getValueParam(SPACES_SUPER_ADMINISTRATORS_PARAM);
-        String superManagersRoles = superAdministratorParam.getValue();
-        if (StringUtils.isNotBlank(superManagersRoles)) {
-          String[] superManagersRolesArray = superManagersRoles.split(",");
-          for (String superManagerRole : superManagersRolesArray) {
-            if (StringUtils.isBlank(superManagerRole)) {
+        String superManagersMemberships = superAdministratorParam.getValue();
+        if (StringUtils.isNotBlank(superManagersMemberships)) {
+          String[] superManagersMembershipsArray = superManagersMemberships.split(",");
+          for (String superManagerMembership : superManagersMembershipsArray) {
+            if (StringUtils.isBlank(superManagerMembership)) {
               continue;
             }
-            if (!superManagerRole.contains(":/")) {
-              // The variable may not be replaced, so don't log anything
-              if (!superManagerRole.startsWith("$")) {
-                LOG.warn("Invalid entry '" + superManagerRole + "'. A permission expression is expected (mstype:groupId).");
-              }
+            if (!superManagerMembership.contains(":/")) {
+              LOG.warn("Invalid entry '" + superManagerMembership + "'. A permission expression is expected (mstype:groupId).");
             } else {
-              String[] membershipParts = superManagerRole.split(":");
-              this.superManagersRoles.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
+              String[] membershipParts = superManagerMembership.split(":");
+              this.superManagersMemberships.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
             }
           }
         }
@@ -412,7 +406,6 @@ public class SpaceServiceImpl implements SpaceService {
   /**
    * {@inheritDoc}
    */
-  @SuppressWarnings("deprecation")
   public Space createSpace(Space space, String creator, String invitedGroupId) {
     // Add creator as a manager and a member to this space
     String[] managers = space.getManagers();
@@ -1158,10 +1151,9 @@ public class SpaceServiceImpl implements SpaceService {
    * 
    * @return
    */
-  @SuppressWarnings("unchecked")
   private Map<String, SpaceApplicationHandler> getSpaceApplicationHandlers() {
     if (this.spaceApplicationHandlers == null) {
-      this.spaceApplicationHandlers = new HashMap();
+      this.spaceApplicationHandlers = new HashMap<>();
 
       ExoContainer container = ExoContainerContext.getCurrentContainer();
       SpaceApplicationHandler appHandler =
@@ -1245,7 +1237,6 @@ public class SpaceServiceImpl implements SpaceService {
     saveSpace(space, false);
   }
 
-  @SuppressWarnings("unchecked")
   private boolean isMandatory(GroupHandler groupHandler, Group group, List<String> mandatories) throws Exception {
     if (mandatories.contains(group.getId()))
       return true;
@@ -1608,9 +1599,9 @@ public class SpaceServiceImpl implements SpaceService {
       }
       identity = new org.exoplatform.services.security.Identity(userId, entries);
     }
-    if (superManagersRoles != null && !superManagersRoles.isEmpty()) {
-      for (MembershipEntry superManagerRole : superManagersRoles) {
-        if (identity.isMemberOf(superManagerRole)) {
+    if (superManagersMemberships != null && !superManagersMemberships.isEmpty()) {
+      for (MembershipEntry superManagerMembership : superManagersMemberships) {
+        if (identity.isMemberOf(superManagerMembership)) {
           return true;
         }
       }
@@ -1622,7 +1613,7 @@ public class SpaceServiceImpl implements SpaceService {
    * {@inheritDoc}
    */
   @Override
-  public void addSuperManagersRoles(String permissionExpression) throws Exception {
+  public void addSuperManagersMembership(String permissionExpression) {
     if(StringUtils.isBlank(permissionExpression)) {
       throw new IllegalArgumentException("Permission expression couldn't be empty");
     }
@@ -1630,14 +1621,35 @@ public class SpaceServiceImpl implements SpaceService {
       throw new IllegalArgumentException("Invalid entry '" + permissionExpression + "'. A permission expression is expected (mstype:groupId).");
     }
     String[] membershipParts = permissionExpression.split(":");
-    superManagersRoles.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
+    superManagersMemberships.add(new MembershipEntry(membershipParts[1], membershipParts[0]));
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public List<MembershipEntry> getSuperManagersRoles() {
-    return Collections.unmodifiableList(superManagersRoles);
+  public void removeSuperManagersMembership(String permissionExpression) {
+    if (StringUtils.isBlank(permissionExpression)) {
+      throw new IllegalArgumentException("Permission expression couldn't be empty");
+    }
+    if (!permissionExpression.contains(":/")) {
+      throw new IllegalArgumentException("Invalid entry '" + permissionExpression
+          + "'. A permission expression is expected (mstype:groupId).");
+    }
+    Iterator<MembershipEntry> superManagersMembershipsIterator = superManagersMemberships.iterator();
+    while (superManagersMembershipsIterator.hasNext()) {
+      MembershipEntry membershipEntry = superManagersMembershipsIterator.next();
+      if (permissionExpression.trim().equals(membershipEntry.toString())) {
+        superManagersMembershipsIterator.remove();
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<MembershipEntry> getSuperManagersMemberships() {
+    return Collections.unmodifiableList(superManagersMemberships);
   }
 }

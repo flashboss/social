@@ -2927,7 +2927,7 @@ public class SpaceServiceTest extends AbstractCoreTest {
     assertEquals(0, spaceService.getAccessibleSpacesByFilter(userName, null).getSize());
     assertEquals(0, spaceService.getSettingableSpaces(userName).getSize());
 
-    spaceService.addSuperManagersRoles("mstypetest:/testgroup");
+    spaceService.addSuperManagersMembership("mstypetest:/testgroup");
     assertTrue(spaceService.isSuperManager(userName));
     assertTrue(spaceService.hasAccessPermission(space, userName));
     assertTrue(spaceService.hasSettingPermission(space, userName));

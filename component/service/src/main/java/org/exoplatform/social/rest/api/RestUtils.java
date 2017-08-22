@@ -117,19 +117,6 @@ public class RestUtils {
   public static boolean isMemberOfAdminGroup() {
     return ConversationState.getCurrent().getIdentity().isMemberOf(ADMIN_GROUP);
   }
-  
-  /**
-   * Gets current authenticated username
-   *
-   * @return username of type {@link String}
-   */
-  public static String getCurrentuserName() {
-    Identity currentIdentity = ConversationState.getCurrent() == null ? null : ConversationState.getCurrent().getIdentity();
-    if(currentIdentity == null) {
-      return null;
-    }
-    return currentIdentity.getUserId();
-  }
 
   /** 
    * Get base url of rest service
