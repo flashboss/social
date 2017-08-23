@@ -35,6 +35,8 @@ import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.jpa.storage.RDBMSActivityStorageImpl;
 import org.exoplatform.social.core.jpa.storage.RDBMSIdentityStorageImpl;
 import org.exoplatform.social.core.jpa.storage.RDBMSSpaceStorageImpl;
+import org.exoplatform.social.core.jpa.storage.dao.IdentityDAO;
+import org.exoplatform.social.core.jpa.storage.entity.IdentityEntity;
 import org.exoplatform.social.core.jpa.test.BaseCoreTest;
 import org.exoplatform.social.core.jpa.test.QueryNumberTest;
 import org.exoplatform.social.core.jpa.updater.*;
@@ -53,10 +55,7 @@ import org.exoplatform.social.core.storage.impl.SpaceStorageImpl;
 import org.jboss.byteman.contrib.bmunit.BMUnit;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author <a href="mailto:tuyennt@exoplatform.com">Tuyen Nguyen The</a>.
@@ -84,8 +83,6 @@ public class MigrationTest extends BaseCoreTest {
 
   private IdentityMigrationService identityMigrationService;
   private ActivityMigrationService activityMigration;
-  private RelationshipMigrationService relationshipMigration;
-  private RDBMSMigrationManager rdbmsMigrationManager;
   private SpaceMigrationService spaceMigrationService;
 
   private List<ExoSocialActivity> activitiesToDelete = new ArrayList<>();
@@ -119,16 +116,13 @@ public class MigrationTest extends BaseCoreTest {
 
     entityManagerService = getService(EntityManagerService.class);
 
-    //
-
-
     identityMigrationService = getService(IdentityMigrationService.class);
     activityMigration = getService(ActivityMigrationService.class);
-    relationshipMigration = getService(RelationshipMigrationService.class);
     spaceMigrationService = getService(SpaceMigrationService.class);
 
-    // Switch to use JCRIdentityStorage
-    ((IdentityManagerImpl)identityManager).setIdentityStorage(identityJCRStorage);
+    deleteIdentities();
+
+    switchToUseJCRStorage();
 
     rootIdentity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, "root", false);
     johnIdentity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, "john", false);
@@ -140,7 +134,7 @@ public class MigrationTest extends BaseCoreTest {
 
   @Override
   public void tearDown() throws Exception {
-    //super.tearDown();
+    deleteIdentities();
 
     for (ExoSocialActivity activity : activitiesToDelete) {
       activityStorage.deleteActivity(activity.getId());
@@ -151,7 +145,6 @@ public class MigrationTest extends BaseCoreTest {
 
   public void testMigrateIdentityWithAvatar() throws Exception {
     // create jcr data
-    rootIdentity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, "root", false);
     Profile rootProfile = rootIdentity.getProfile();
 
     InputStream inputStream = getClass().getResourceAsStream("/eXo-Social.png");
@@ -166,12 +159,11 @@ public class MigrationTest extends BaseCoreTest {
 
     identityMigrationService.start();
 
-    rootIdentity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, "root", false);
+    rootIdentity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, "root", true);
     rootProfile = rootIdentity.getProfile();
 
-    // FIXME - data must be cleaned after each test
-    //assertNotNull(rootProfile.getAvatarUrl());
-    //assertEquals(LinkProvider.buildAvatarURL(OrganizationIdentityProvider.NAME, "root"), rootProfile.getAvatarUrl());
+    assertNotNull(rootProfile.getAvatarUrl());
+    assertEquals(LinkProvider.buildAvatarURL(OrganizationIdentityProvider.NAME, "root"), rootProfile.getAvatarUrl());
   }
 
 
@@ -287,15 +279,24 @@ public class MigrationTest extends BaseCoreTest {
     assertNull(spaceIdentity);
   }
 
+  protected void deleteIdentities() {
+    IdentityDAO identityDAO = getService(IdentityDAO.class);
+    Arrays.asList("root", "john", "mary", "demo").stream().forEach(userId -> {
+      IdentityEntity identityEntity = identityDAO.findByProviderAndRemoteId(OrganizationIdentityProvider.NAME, userId);
+      if (identityEntity != null) {
+        identityDAO.delete(identityEntity);
+      }
+    });
+  }
+
   protected void switchToUseJPAStorage() {
-    // Swith to use RDBMSIdentityStorage
+    // Switch to use JPA IdentityStorage
     ((IdentityManagerImpl)identityManager).setIdentityStorage(identityJPAStorage);
-    if (spaceStorage instanceof RDBMSSpaceStorageImpl) {
-      ((RDBMSSpaceStorageImpl)spaceStorage).setIdentityStorage(identityJPAStorage);
-    }
-    if (activityStorage instanceof RDBMSActivityStorageImpl) {
-      ((RDBMSActivityStorageImpl)activityStorage).setIdentityStorage(identityJPAStorage);
-    }
+  }
+
+  protected void switchToUseJCRStorage() {
+    // Switch to use JCR IdentityStorage
+    ((IdentityManagerImpl)identityManager).setIdentityStorage(identityJCRStorage);
   }
 
   private Space createSpace() {

@@ -301,7 +301,7 @@ public class RDBMSIdentityStorageImpl implements IdentityStorage {
   }
 
   /**
-   * Deletes an identity from JCR
+   * Deletes an identity
    *
    * @param identity the Identity to be deleted
    * @throws IdentityStorageException if has any error
@@ -311,7 +311,7 @@ public class RDBMSIdentityStorageImpl implements IdentityStorage {
   }
 
   /**
-   * Hard delete an identity from JCR
+   * Hard delete an identity
    *
    * @param identity the identity to be deleted
    * @throws IdentityStorageException if has any error
@@ -326,10 +326,10 @@ public class RDBMSIdentityStorageImpl implements IdentityStorage {
     if (entity != null) {
       entity.setDeleted(true);
       getIdentityDAO().update(entity);
-    }
 
-    if (entity.getAvatarFileId() != null && entity.getAvatarFileId() > 0) {
-      fileService.deleteFile(entity.getAvatarFileId());
+      if (entity.getAvatarFileId() != null && entity.getAvatarFileId() > 0) {
+        fileService.deleteFile(entity.getAvatarFileId());
+      }
     }
 
     EntityManager em = CommonsUtils.getService(EntityManagerService.class).getEntityManager();
@@ -453,7 +453,7 @@ public class RDBMSIdentityStorageImpl implements IdentityStorage {
   }
 
   /**
-   * Add or modify properties of profile and persist to JCR. Profile parameter is a lightweight that
+   * Add or modify properties of profile and persist to database. Profile parameter is a lightweight that
    * contains only the property that you want to add or modify. NOTE: The method will
    * not delete the properties on old profile when the param profile have not those keys.
    *
