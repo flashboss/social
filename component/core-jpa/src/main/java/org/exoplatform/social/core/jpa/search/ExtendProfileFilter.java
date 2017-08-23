@@ -48,10 +48,10 @@ public class ExtendProfileFilter extends ProfileFilter {
 
   public ExtendProfileFilter(ProfileFilter delegate) {
     if (delegate == null) {
-      this.delegate = new ProfileFilter();
-    } else {
-      this.delegate = delegate;
+      delegate = new ProfileFilter();
     }
+
+    this.delegate = delegate;
   }
 
   public Identity getConnection() {
