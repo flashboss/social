@@ -15,7 +15,7 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 
 @Managed
 @ManagedDescription("Social Service manager bean")
-@NameTemplate({ @Property(key = "service", value = "social"), @Property(key = "view", value = "spaceservice") })
+@NameTemplate({ @Property(key = "service", value = "social"), @Property(key = "view", value = "SpaceService") })
 @RESTEndpoint(path = "spaceservice")
 public class SpaceServiceManagerBean {
   SpaceService spaceService;

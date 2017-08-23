@@ -34,10 +34,8 @@ import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.commons.utils.ISO8601;
 import org.exoplatform.services.rest.impl.ApplicationContextImpl;
 import org.exoplatform.services.security.ConversationState;
-import org.exoplatform.services.security.Identity;
 import org.exoplatform.services.security.IdentityConstants;
 import org.exoplatform.social.rest.entity.DataEntity;
-import org.exoplatform.web.application.RequestContext;
 
 public class RestUtils {
 
@@ -108,7 +106,7 @@ public class RestUtils {
     }
     return false;
   }
-
+  
   /**
    * Check if the authenticated user is a member of the admin group
    * 
@@ -117,7 +115,7 @@ public class RestUtils {
   public static boolean isMemberOfAdminGroup() {
     return ConversationState.getCurrent().getIdentity().isMemberOf(ADMIN_GROUP);
   }
-
+  
   /** 
    * Get base url of rest service
    * 
