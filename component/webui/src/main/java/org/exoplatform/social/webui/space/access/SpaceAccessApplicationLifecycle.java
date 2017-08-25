@@ -17,6 +17,9 @@
 package org.exoplatform.social.webui.space.access;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.portal.application.PortalRequestContext;
@@ -112,22 +115,30 @@ public class SpaceAccessApplicationLifecycle implements ApplicationLifecycle<Web
     IdentityRegistry identityRegistry = CommonsUtils.getService(IdentityRegistry.class);
     Identity identity = identityRegistry.getIdentity(remoteId);
     if (identity != null) {
-      
+
       SpaceService spaceService = Utils.getSpaceService();
       boolean isSuperManager = spaceService.isSuperManager(remoteId);
-
-      boolean isMember = spaceService.isMember(space, remoteId);
-      //add membership's member to Identity if it's absent
-      MembershipEntry me = new MembershipEntry(space.getGroupId(), SpaceUtils.MEMBER);
-      if ((isMember || isSuperManager) && !identity.isMemberOf(me)) {
-        identity.getMemberships().add(me);
-      }
-      
-      //add membership's manager to Identity if it's absent
       boolean isManager = spaceService.isManager(space, remoteId);
-      me = new MembershipEntry(space.getGroupId(), SpaceUtils.MANAGER);
-      if ((isManager || isSuperManager) && !identity.isMemberOf(me))
-        identity.getMemberships().add(me);
+      boolean isMember = spaceService.isMember(space, remoteId);
+
+      // add membership's member to Identity if it's absent
+      MembershipEntry memberMembership = new MembershipEntry(space.getGroupId(), SpaceUtils.MEMBER);
+      MembershipEntry managerMembership = new MembershipEntry(space.getGroupId(), SpaceUtils.MANAGER);
+
+      Collection<MembershipEntry> memberships = identity.getMemberships();
+
+      if (isMember || isSuperManager) {
+        memberships.add(memberMembership);
+      } else {
+        memberships.remove(memberMembership);
+      }
+
+      // add membership's manager to Identity if it's absent
+      if (isManager || isSuperManager) {
+        memberships.add(managerMembership);
+      } else {
+        memberships.remove(managerMembership);
+      }
     }
   }
 
