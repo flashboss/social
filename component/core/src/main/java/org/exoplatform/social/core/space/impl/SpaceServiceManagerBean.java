@@ -63,6 +63,6 @@ public class SpaceServiceManagerBean {
   @ManagedDescription("Remove Spaces super managers membership")
   @Impact(ImpactType.WRITE)
   public void removeSpaceManager(@ManagedDescription("Spaces super manger memberships") @ManagedName("permissionExpression") String permissionExpression) {
-    spaceService.addSuperManagersMembership(permissionExpression);
+    spaceService.removeSuperManagersMembership(permissionExpression);
   }
 }
