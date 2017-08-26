@@ -37,9 +37,9 @@
   def profileURL, activitiesURL, fullName, possition, actionAccept, actionDeny, position;
   def relationIdx = 0;
   def isOwner = Utils.isOwner();
-  def removeConnectionLabel = _ctx.appRes(${uicomponentId}.label.RemoveConnection")
-  def connectionLabel = _ctx.appRes(${uicomponentId}.label.Connection")
-  def removeTitle = _ctx.appRes(${uicomponentId}.label.RemoveConnection")
+  def removeConnectionLabel = _ctx.appRes("${uicomponentId}.label.RemoveConnection")
+  def connectionLabel = _ctx.appRes("${uicomponentId}.label.Connection")
+  def removeTitle = _ctx.appRes("${uicomponentId}.label.RemoveConnection")
   
   if (uicomponent.isNewOwner()) {
     uicomponent.init();
@@ -92,7 +92,7 @@
         <h4 class="titleWithBorder">$contactsDirectory</h4>
         <!--div class="DirectoryNormalBox"-->
         <div class="uiFilterList">
-            <div class="result clearfix"><span class="number"><%=uicomponent.peopleNum; %></span><%=_ctx.appRes(${uicomponentId}.label.DisplayInOrderOfAlphabet")%></div>
+            <div class="result clearfix"><span class="number"><%=uicomponent.peopleNum; %></span><%=_ctx.appRes("${uicomponentId}.label.DisplayInOrderOfAlphabet")%></div>
             <ul class="letterList"> 
                  <li>
                  <% if (selectedStartChar == null || selectedStartChar == "All") { %>
@@ -162,7 +162,7 @@
   
    <% if(uicomponent.isEnableLoadNext()) { %>
       <button id="LoadMoreButton" class="load-more-items btn" onclick="<%=uicomponent.event('LoadMorePeople')%>" >
-        <%=_ctx.appRes(${uicomponentId}.label.ShowMore")%>
+        <%=_ctx.appRes("${uicomponentId}.label.ShowMore")%>
       </button>
   <% } else { %>
       <script type="text/javascript">
