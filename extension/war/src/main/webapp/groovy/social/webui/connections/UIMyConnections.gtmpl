@@ -37,9 +37,9 @@
   def profileURL, activitiesURL, fullName, possition, actionAccept, actionDeny, position;
   def relationIdx = 0;
   def isOwner = Utils.isOwner();
-  def removeConnectionLabel = _ctx.appRes(uicomponent.getId() + ".label.RemoveConnection")
-  def connectionLabel = _ctx.appRes(uicomponent.getId() + ".label.Connection")
-  def removeTitle = _ctx.appRes(uicomponent.getId() + ".label.RemoveConnection")
+  def removeConnectionLabel = _ctx.appRes(${uicomponentId}.label.RemoveConnection")
+  def connectionLabel = _ctx.appRes(${uicomponentId}.label.Connection")
+  def removeTitle = _ctx.appRes(${uicomponentId}.label.RemoveConnection")
   
   if (uicomponent.isNewOwner()) {
     uicomponent.init();
@@ -66,8 +66,8 @@
 	
 	def allPeopleURL = "${portalURI}${selectedNode}/all-people/${ownerId}";
 	def networkURL = "${portalURI}${selectedNode}/network/${ownerId}";
-	def receivedInvitationsURL = "${portalURI}${selectedNode}/receivedInvitations/${ownerId}";
-	def sentInvitationURL = "${portalURI}${selectedNode}/pendingRequests/${ownerId}";
+	def receivedInvitationsURL = "${portalURI}${selectedNode}/received-invitations/${ownerId}";
+	def sentInvitationURL = "${portalURI}${selectedNode}/pending-requests/${ownerId}";
 
 	def selectedStartChar = uicomponent.getSelectedChar();
 	def jsManager = _ctx.getRequestContext().getJavascriptManager();
@@ -92,7 +92,7 @@
         <h4 class="titleWithBorder">$contactsDirectory</h4>
         <!--div class="DirectoryNormalBox"-->
         <div class="uiFilterList">
-            <div class="result clearfix"><span class="number"><%=uicomponent.peopleNum; %></span><%=_ctx.appRes(uicomponent.getId() + ".label.DisplayInOrderOfAlphabet")%></div>
+            <div class="result clearfix"><span class="number"><%=uicomponent.peopleNum; %></span><%=_ctx.appRes(${uicomponentId}.label.DisplayInOrderOfAlphabet")%></div>
             <ul class="letterList"> 
                  <li>
                  <% if (selectedStartChar == null || selectedStartChar == "All") { %>
@@ -162,7 +162,7 @@
   
    <% if(uicomponent.isEnableLoadNext()) { %>
       <button id="LoadMoreButton" class="load-more-items btn" onclick="<%=uicomponent.event('LoadMorePeople')%>" >
-        <%=_ctx.appRes(uicomponent.getId() + ".label.ShowMore")%>
+        <%=_ctx.appRes(${uicomponentId}.label.ShowMore")%>
       </button>
   <% } else { %>
       <script type="text/javascript">
