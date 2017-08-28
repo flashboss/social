@@ -60,8 +60,8 @@ String selectedNode = URLUtils.getRequestedNode();
 
 String allPeopleURL = "${portalURI}${selectedNode}/all-people/${ownerId}";
 String networkURL = "${portalURI}${selectedNode}/network/${ownerId}";
-String receivedInvitationsURL = "${portalURI}${selectedNode}/received-invitations/${ownerId}";
-String sentInvitationURL = "${portalURI}${selectedNode}/pending-requests/${ownerId}";
+String receivedInvitationsURL = "${portalURI}${selectedNode}/receivedInvitations/${ownerId}";
+String sentInvitationURL = "${portalURI}${selectedNode}/pendingRequests/${ownerId}";
 
 String selectedStartChar = uicomponent.getSelectedChar();
 //
